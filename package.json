@@ -6,7 +6,9 @@
   "scripts": {
     "uninstall": "rm -rf node_modules",
     "reinstall": "rm -rf node_modules && npm i",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node app.js",
+    "start": "node app.js"
   },
   "author": "beforesecond",
   "license": "MIT",

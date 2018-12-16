@@ -2,6 +2,12 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
 var request = require('request')
+var path, node_ssh, ssh, fs
+
+fs = require('fs')
+path = require('path')
+node_ssh = require('node-ssh')
+ssh = new node_ssh()
 
 app.use(bodyParser.json())
 
@@ -23,38 +29,50 @@ app.post('/webhook', (req, res) => {
   var replyToken = req.body.events[0].replyToken
   console.log(text, sender, replyToken)
   console.log(typeof sender, typeof text)
-  if (text === 'สวัสดี' || text === 'Hello' || text === 'hello') {
-    sendText(sender, text)
-  }
+  //if (text === 'สวัสดี' || text === 'Hello' || text === 'hello') {
+  sendText(sender, text)
+  //}
   res.sendStatus(200)
 })
 
 function sendText(sender, text) {
-  let data = {
-    to: sender,
-    messages: [
-      {
-        type: 'text',
-        text: 'สวัสดีค่ะ เราเป็นผู้ช่วยปรึกษาด้านความรัก สำหรับหมามิ้น 💞'
-      }
-    ]
-  }
-  request(
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization:
-          'Bearer {2tBqrB8DQKsRxH9c28ro9NGOm1gJRPdTY44ISz31oKxKqO8d/3WaSGPNrHAnXcmS3shX51TVLgulWtHpZaSuJEeTAGCkNWLJ4DYQeDlnZAEYfSyT71CxK6q/wQLqB7S7L9wlXlcCwJaGkXTFmr7STAdB04t89/1O/w1cDnyilFU=}'
-      },
-      url: 'https://api.line.me/v2/bot/message/push',
-      method: 'POST',
-      body: data,
-      json: true
-    },
-    function(err, res, body) {
-      if (err) console.log('error')
-      if (res) console.log('success')
-      if (body) console.log(body)
-    }
-  )
+  ssh
+    .connect({
+      host: 'ec2-54-255-209-52.ap-southeast-1.compute.amazonaws.com',
+      username: 'ec2-user',
+      privateKey: 'aws-firstnaruto.pem'
+    })
+    .then((result, error) => {
+      ssh.execCommand(text, { cwd: '/var/www' }).then(function(result) {
+        console.log('STDOUT: ' + result.stdout)
+        console.log('STDERR: ' + result.stderr)
+        let data = {
+          to: sender,
+          messages: [
+            {
+              type: 'text',
+              text: result.stdout
+            }
+          ]
+        }
+        request(
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization:
+                'Bearer {2tBqrB8DQKsRxH9c28ro9NGOm1gJRPdTY44ISz31oKxKqO8d/3WaSGPNrHAnXcmS3shX51TVLgulWtHpZaSuJEeTAGCkNWLJ4DYQeDlnZAEYfSyT71CxK6q/wQLqB7S7L9wlXlcCwJaGkXTFmr7STAdB04t89/1O/w1cDnyilFU=}'
+            },
+            url: 'https://api.line.me/v2/bot/message/push',
+            method: 'POST',
+            body: data,
+            json: true
+          },
+          function(err, res, body) {
+            if (err) console.log('error')
+            if (res) console.log('success')
+            if (body) console.log(body)
+          }
+        )
+      })
+    })
 }

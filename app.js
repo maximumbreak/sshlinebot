@@ -27,20 +27,16 @@ app.post('/webhook', (req, res) => {
   var text = req.body.events[0].message.text
   var sender = req.body.events[0].source.userId
   var replyToken = req.body.events[0].replyToken
-  console.log(text, sender, replyToken)
-  console.log(typeof sender, typeof text)
-  //if (text === 'สวัสดี' || text === 'Hello' || text === 'hello') {
   sendText(sender, text)
-  //}
   res.sendStatus(200)
 })
 
 function sendText(sender, text) {
   ssh
     .connect({
-      host: 'ec2-54-255-209-52.ap-southeast-1.compute.amazonaws.com',
+      host: 'ec2-host.compute.amazonaws.com',
       username: 'ec2-user',
-      privateKey: 'aws-firstnaruto.pem'
+      privateKey: 'privatekey.pem'
     })
     .then((result, error) => {
       ssh.execCommand(text, { cwd: '/var/www' }).then(function(result) {
@@ -59,8 +55,7 @@ function sendText(sender, text) {
           {
             headers: {
               'Content-Type': 'application/json',
-              Authorization:
-                'Bearer {2tBqrB8DQKsRxH9c28ro9NGOm1gJRPdTY44ISz31oKxKqO8d/3WaSGPNrHAnXcmS3shX51TVLgulWtHpZaSuJEeTAGCkNWLJ4DYQeDlnZAEYfSyT71CxK6q/wQLqB7S7L9wlXlcCwJaGkXTFmr7STAdB04t89/1O/w1cDnyilFU=}'
+              Authorization: 'Bearer {AUTHEN KEY}'
             },
             url: 'https://api.line.me/v2/bot/message/push',
             method: 'POST',
